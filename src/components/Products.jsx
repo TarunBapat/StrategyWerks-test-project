@@ -12,14 +12,9 @@ const Products = () => {
   const [count, setCount] = useState(10);
   const [showModal, setShowModal] = useState(false);
   const [product, setProduct] = useState(null);
-  const [category, setCategory] = useState("all"); // Selected category
-  const [order, setOrder] = useState("asc"); // Selected order (asc/desc)
+  const [category, setCategory] = useState("all");
+  const [order, setOrder] = useState("asc");
 
-  console.log(
-    "product?.length >= allProducts?.length",
-    products?.length,
-    allProducts?.length
-  );
   async function fetchProducts() {
     try {
       setLoading(true);
