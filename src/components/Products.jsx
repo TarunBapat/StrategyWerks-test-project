@@ -12,7 +12,14 @@ const Products = () => {
   const [count, setCount] = useState(10);
   const [showModal, setShowModal] = useState(false);
   const [product, setProduct] = useState(null);
+  const [category, setCategory] = useState("all"); // Selected category
+  const [order, setOrder] = useState("asc"); // Selected order (asc/desc)
 
+  console.log(
+    "product?.length >= allProducts?.length",
+    products?.length,
+    allProducts?.length
+  );
   async function fetchProducts() {
     try {
       setLoading(true);
@@ -28,22 +35,81 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  console.log("allProducts", allProducts);
+  // Fetch products whenever sort filter changes
+  async function fetchFilteredProducts() {
+    try {
+      const response = await Api.getSortedProducts(order);
+      setAllProducts(response.data);
+      setProducts(response.data.slice(0, count));
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  useEffect(() => {
+    fetchFilteredProducts();
+  }, [order]);
+
+  // Fetch products whenever category changes
+  async function fetchProductsCategory() {
+    let response;
+    try {
+      if (category == "all") {
+        response = await Api.getAllProducts();
+      } else {
+        response = await Api.getCategoryOfProduct(category);
+      }
+      setAllProducts(response.data);
+      setProducts(response.data.slice(0, count));
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  useEffect(() => {
+    fetchProductsCategory();
+  }, [category]);
+
   // Handle Load More button click
   const handleLoadMore = () => {
-    console.log("allProducts", allProducts);
     let nextCount = products?.length + 10;
     let nextproducts = allProducts.slice(count, nextCount);
     setCount(nextCount);
     setProducts((prevProducts) => [...prevProducts, ...nextproducts]);
-    console.log("products", products);
   };
+
   const getProductDetails = (data) => {
-    console.log("data", data);
     setProduct(data);
   };
   return (
     <>
+      {/* Filter Section */}
+      <div className="flex flex-wrap items-center gap-4 mb-6 p-8">
+        {/* Category Filter */}
+        <h3 className="bg-blue-100 text-blue-800 text-md font-semibold px-2 py-1 rounded">
+          Sort Products:
+        </h3>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e?.target?.value)}
+          className="p-2 border rounded"
+        >
+          <option value="all">All Categories</option>
+          <option value="men's clothing">Mens Clothing</option>
+          <option value="women's clothing">Womens Clothing</option>
+          <option value="electronics">Electronics</option>
+          <option value="jewelery">Jewelery</option>
+        </select>
+
+        {/* Sort Order */}
+        <select
+          value={order}
+          onChange={(e) => setOrder(e?.target?.value)}
+          className="p-2 border rounded"
+        >
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+      </div>
+
       {/* Modal*/}
       {showModal && (
         <ProductModal setShowModal={setShowModal} product={product} />
@@ -52,11 +118,11 @@ const Products = () => {
 
       {/* Products*/}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-8">
         {!loading &&
-          products.map((product) => (
+          products?.map((product) => (
             <ProductCard
-              key={product.id}
+              key={product?.id}
               product={product}
               setShowModal={setShowModal}
               getProduct={getProductDetails}
@@ -67,13 +133,16 @@ const Products = () => {
       {/* Load More Button */}
 
       <div className="text-center mt-6">
-        <button
-          onClick={handleLoadMore}
-          className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
-          disabled={count >= allProducts.length}
-        >
-          {"Load More"}
-        </button>
+        {products?.length >= allProducts?.length ? (
+          ""
+        ) : (
+          <button
+            onClick={handleLoadMore}
+            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+          >
+            Load More
+          </button>
+        )}
       </div>
     </>
   );

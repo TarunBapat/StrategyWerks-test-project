@@ -9,7 +9,10 @@ const apiClient = () => {
     },
   });
   return {
-    getAllProducts: () => client.get(`/products`),
+    getAllProducts: () => client.get(`products`),
+    getCategoryOfProduct: (payload) =>
+      client.get(`products/category/${payload}`),
+    getSortedProducts: (payload) => client.get(`products?sort=${payload}`),
   };
 };
 
