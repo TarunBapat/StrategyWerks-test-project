@@ -128,8 +128,8 @@ const Products = () => {
           }}
           className="p-2 border rounded"
         >
-          <option value="high-to-low">high to low</option>
-          <option value="low-to-high">low to high</option>
+          <option value="high-to-low">price high to low</option>
+          <option value="low-to-high">price low to high</option>
         </select>
       </div>
 
