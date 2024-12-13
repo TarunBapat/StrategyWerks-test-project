@@ -14,7 +14,7 @@ const Products = () => {
   const [product, setProduct] = useState(null);
   const [category, setCategory] = useState("all");
   const [order, setOrder] = useState("asc");
-
+  const [orderPrice, setOrderPrice] = useState("low-to-high");
   async function fetchProducts() {
     try {
       setLoading(true);
@@ -74,6 +74,23 @@ const Products = () => {
   const getProductDetails = (data) => {
     setProduct(data);
   };
+  const sortProductsByPrice = (orderPrice) => {
+    return products?.sort((a, b) => {
+      if (orderPrice === "high-to-low") {
+        return b.price - a.price; // Descending order
+      } else if (orderPrice === "low-to-high") {
+        return a.price - b.price; // Ascending order
+      }
+      return 0; // Default case
+    });
+  };
+
+  useEffect(() => {
+    console.log("here");
+    const priceFilteredData = sortProductsByPrice(orderPrice);
+    setProducts(priceFilteredData.slice(0, count));
+  }, [orderPrice, category]);
+
   return (
     <>
       {/* Filter Section */}
@@ -102,6 +119,17 @@ const Products = () => {
         >
           <option value="asc">Ascending</option>
           <option value="desc">Descending</option>
+        </select>
+        {/* Sort Order */}
+        <select
+          value={orderPrice}
+          onChange={(e) => {
+            setOrderPrice(e?.target?.value);
+          }}
+          className="p-2 border rounded"
+        >
+          <option value="high-to-low">high to low</option>
+          <option value="low-to-high">low to high</option>
         </select>
       </div>
 

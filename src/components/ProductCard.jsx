@@ -18,9 +18,6 @@ const ProductCard = ({ product, setShowModal, getProduct }) => {
       {/* Product Name */}
       <h2 className="text-lg font-semibold">{product?.title}</h2>
 
-      {/* Product Description */}
-      <p className="text-gray-500">{product?.description}</p>
-
       {/* Product Price */}
       <p className="font-bold">${product?.price}</p>
     </div>
