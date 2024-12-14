@@ -1,27 +1,29 @@
-import { useState } from "react";
+import { useReducer } from "react";
 import { useEffect } from "react";
 import Api from "../Api";
 import Loader from "./Loader";
 import ProductCard from "./ProductCard";
 import ProductModal from "./ProductModal";
+import productReducer from "../reducer/productReducer";
+import initialState from "../reducer/initialState";
 
 const Products = () => {
-  const [allProducts, setAllProducts] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [count, setCount] = useState(10);
-  const [showModal, setShowModal] = useState(false);
-  const [product, setProduct] = useState(null);
-  const [category, setCategory] = useState("all");
-  const [order, setOrder] = useState("asc");
-  const [orderPrice, setOrderPrice] = useState("low-to-high");
+  const [state, dispatch] = useReducer(productReducer, initialState);
+
   async function fetchProducts() {
     try {
-      setLoading(true);
+      dispatch({ type: "SET_LOADING", payload: true });
+      // setLoading(true);
       const response = await Api.getAllProducts();
-      setAllProducts(response.data);
-      setProducts(response.data.slice(0, count));
-      setLoading(false);
+      dispatch({ type: "SET_ALL_PRODUCTS", payload: response.data });
+      // setAllProducts(response.data);
+      dispatch({
+        type: "SET_PRODUCTS",
+        payload: response.data.slice(0, state?.count),
+      });
+      // setProducts(response.data.slice(0, count));
+      dispatch({ type: "SET_LOADING", payload: false });
+      // setLoading(false);
     } catch (error) {
       console.log(error);
     }
@@ -33,49 +35,71 @@ const Products = () => {
   // Fetch products whenever sort filter changes
   async function fetchFilteredProducts() {
     try {
-      const response = await Api.getSortedProducts(order);
-      setAllProducts(response.data);
-      setProducts(response.data.slice(0, count));
+      const response = await Api.getSortedProducts(state.order);
+      dispatch({ type: "SET_ALL_PRODUCTS", payload: response.data });
+      // setAllProducts(response.data);
+      dispatch({
+        type: "SET_PRODUCTS",
+        payload: response.data.slice(0, state?.count),
+      });
+      // setProducts(response.data.slice(0, state.count));
     } catch (error) {
       console.log(error);
     }
   }
   useEffect(() => {
     fetchFilteredProducts();
-  }, [order]);
+  }, [state?.order]);
 
   // Fetch products whenever category changes
   async function fetchProductsCategory() {
     let response;
     try {
-      if (category == "all") {
+      if (state?.category == "all") {
         response = await Api.getAllProducts();
       } else {
-        response = await Api.getCategoryOfProduct(category);
+        response = await Api.getCategoryOfProduct(state.category);
       }
-      setAllProducts(response.data);
-      setProducts(response.data.slice(0, count));
+      dispatch({ type: "SET_ALL_PRODUCTS", payload: response.data });
+      // setAllProducts(response.data);
+      dispatch({
+        type: "SET_PRODUCTS",
+        payload: response.data.slice(0, state?.count),
+      });
+      // setProducts(response.data.slice(0, state.count));
     } catch (error) {
       console.log(error);
     }
   }
   useEffect(() => {
     fetchProductsCategory();
-  }, [category]);
+  }, [state?.category]);
 
   // Handle Load More button click
   const handleLoadMore = () => {
-    let nextCount = products?.length + 10;
-    let nextproducts = allProducts.slice(count, nextCount);
-    setCount(nextCount);
-    setProducts((prevProducts) => [...prevProducts, ...nextproducts]);
+    let nextCount = state?.products?.length + 10;
+    let nextproducts = state?.allProducts?.slice(state?.count, nextCount);
+    dispatch({
+      type: "SET_COUNT",
+      payload: nextCount,
+    });
+    // setCount(nextCount);
+    dispatch({
+      type: "SET_PRODUCTS",
+      payload: [...state.products, ...nextproducts],
+    });
+    // setProducts((prevProducts) => [...prevProducts, ...nextproducts]);
   };
 
   const getProductDetails = (data) => {
-    setProduct(data);
+    dispatch({
+      type: "SET_PRODUCT",
+      payload: data,
+    });
+    // setProduct(data);
   };
   const sortProductsByPrice = (orderPrice) => {
-    return products?.sort((a, b) => {
+    return state?.products?.sort((a, b) => {
       if (orderPrice === "high-to-low") {
         return b.price - a.price; // Descending order
       } else if (orderPrice === "low-to-high") {
@@ -86,10 +110,13 @@ const Products = () => {
   };
 
   useEffect(() => {
-    console.log("here");
-    const priceFilteredData = sortProductsByPrice(orderPrice);
-    setProducts(priceFilteredData.slice(0, count));
-  }, [orderPrice, category]);
+    const priceFilteredData = sortProductsByPrice(state?.orderPrice);
+    dispatch({
+      type: "SET_PRODUCTS",
+      payload: priceFilteredData.slice(0, state?.count),
+    });
+    // setProducts(priceFilteredData.slice(0, state?.count));
+  }, [state?.orderPrice, state?.category]);
 
   return (
     <>
@@ -100,8 +127,13 @@ const Products = () => {
           Sort Products:
         </h3>
         <select
-          value={category}
-          onChange={(e) => setCategory(e?.target?.value)}
+          value={state?.category}
+          onChange={(e) =>
+            dispatch({
+              type: "SET_CATEGORY",
+              payload: e.target.value,
+            })
+          }
           className="p-2 border rounded"
         >
           <option value="all">All Categories</option>
@@ -113,8 +145,13 @@ const Products = () => {
 
         {/* Sort Order */}
         <select
-          value={order}
-          onChange={(e) => setOrder(e?.target?.value)}
+          value={state?.order}
+          onChange={(e) =>
+            dispatch({
+              type: "SET_ORDER",
+              payload: e.target.value,
+            })
+          }
           className="p-2 border rounded"
         >
           <option value="asc">Ascending</option>
@@ -122,9 +159,12 @@ const Products = () => {
         </select>
         {/* Sort Order */}
         <select
-          value={orderPrice}
+          value={state?.orderPrice}
           onChange={(e) => {
-            setOrderPrice(e?.target?.value);
+            dispatch({
+              type: "SET_ORDER_PRICE",
+              payload: e.target.value,
+            });
           }}
           className="p-2 border rounded"
         >
@@ -134,20 +174,25 @@ const Products = () => {
       </div>
 
       {/* Modal*/}
-      {showModal && (
-        <ProductModal setShowModal={setShowModal} product={product} />
+      {state?.showModal && (
+        <ProductModal
+          // setShowModal={setShowModal}
+          product={state?.product}
+          dispatch={dispatch}
+        />
       )}
-      <div className="text-center mt-6">{loading && <Loader />}</div>
+      <div className="text-center mt-6">{state?.loading && <Loader />}</div>
 
       {/* Products*/}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-8">
-        {!loading &&
-          products?.map((product) => (
+        {!state?.loading &&
+          state?.products?.map((product) => (
             <ProductCard
               key={product?.id}
               product={product}
-              setShowModal={setShowModal}
+              // setShowModal={setShowModal}
+              dispatch={dispatch}
               getProduct={getProductDetails}
             />
           ))}
@@ -156,7 +201,7 @@ const Products = () => {
       {/* Load More Button */}
 
       <div className="text-center mt-6">
-        {products?.length >= allProducts?.length ? (
+        {state?.products?.length >= state?.allProducts?.length ? (
           ""
         ) : (
           <button

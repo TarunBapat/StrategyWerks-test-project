@@ -1,10 +1,13 @@
-const ProductCard = ({ product, setShowModal, getProduct }) => {
+const ProductCard = ({ product, setShowModal, getProduct, dispatch }) => {
   return (
     <div
       key={product?.id}
       className="bg-white p-4 rounded shadow-md border"
       onClick={() => {
-        setShowModal(true);
+        dispatch({
+          type: "TOGGLE_MODAL",
+          payload: true,
+        });
         getProduct(product);
       }}
     >

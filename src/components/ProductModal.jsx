@@ -1,10 +1,15 @@
-const ProductModal = ({ setShowModal, product }) => {
+const ProductModal = ({ setShowModal, product, dispatch }) => {
   const { image, title, category, description, price, rating } = product;
   return (
     <div className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded shadow-lg text-center relative">
         <span
-          onClick={() => setShowModal(false)}
+          onClick={() =>
+            dispatch({
+              type: "TOGGLE_MODAL",
+              payload: false,
+            })
+          }
           className="absolute right-0 top-0 bg-red-400 p-3 rounded- cursor-pointer"
         >
           X
